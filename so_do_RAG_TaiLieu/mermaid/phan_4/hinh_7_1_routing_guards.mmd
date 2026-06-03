@@ -1,0 +1,45 @@
+flowchart TB
+    URL["URL người dùng truy cập"]
+    ROUTER["<b>App.jsx · React Router</b>"]
+
+    PATH{"path?"}
+
+    LOGIN["<b>/login</b> · LoginPage (public)<br/>nếu đã login → redirect /"]
+
+    PROTECT["<b>ProtectedRoute</b> · kiểm tra accessToken && user<br/>chưa login → redirect /login"]
+
+    CHAT["<b>/ → ChatPage</b>"]
+
+    ADMIN_R["<b>AdminRoute</b> · ProtectedRoute + hasManagerAccess(user.role)<br/>rank &lt; manager → redirect /"]
+
+    ADMIN_P["<b>/admin → AdminPage</b> (4 tabs)"]
+
+    REDIRECT[("/* → redirect /")]
+
+    URL --> ROUTER --> PATH
+    PATH -->|"/login"| LOGIN
+    PATH -->|"/"| PROTECT --> CHAT
+    PATH -->|"/admin"| ADMIN_R --> ADMIN_P
+    PATH -->|"others"| REDIRECT
+
+    NOTE["<b>RBAC</b> · ROLE_RANK = {user:1, manager:2, admin:3, superadmin:4}<br/>hasManagerAccess(role) → rank ≥ 2 · hasAdminAccess(role) → rank ≥ 3"]
+
+    NOTE -.- ADMIN_R
+
+    classDef url fill:#FFF3E0,stroke:#E65100,color:#BF360C
+    classDef router fill:#E1F5FE,stroke:#0277BD,color:#01579B
+    classDef decision fill:#FFFDE7,stroke:#F57F17,color:#F57F17
+    classDef public fill:#E0F2F1,stroke:#00695C,color:#004D40
+    classDef protect fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef admin fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#B71C1C
+    classDef redirect fill:#FCE4EC,stroke:#C2185B,color:#C2185B
+    classDef note fill:#FFFDE7,stroke:#F57F17,stroke-dasharray:5 5,color:#5D4037
+
+    class URL url
+    class ROUTER router
+    class PATH decision
+    class LOGIN public
+    class PROTECT,CHAT protect
+    class ADMIN_R,ADMIN_P admin
+    class REDIRECT redirect
+    class NOTE note

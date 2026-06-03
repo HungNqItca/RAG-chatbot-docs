@@ -1,0 +1,64 @@
+```mermaid
+flowchart TB
+    subgraph CLIENT["NGƯỜI DÙNG"]
+        USR["👤 Nhân viên TTTT<br/>~100 người dùng đồng thời<br/>Mạng LAN nội bộ"]
+    end
+
+    subgraph TIER1["TẦNG 1 — FRONTEND · agribank-chat :5173"]
+        direction TB
+        T1A["React 18 + Vite 5"]
+        T1B["Zustand (state)"]
+        T1C["Axios (REST)"]
+        T1D["fetch-SSE client"]
+    end
+
+    subgraph TIER2["TẦNG 2 — BACKEND-FOR-FRONTEND · bff-service :8082"]
+        direction TB
+        T2A["JWT Auth<br/>HS256"]
+        T2B["RBAC 4-tier<br/>user/manager/admin/super"]
+        T2C["Rate Limit<br/>slowapi"]
+        T2D["SSE Proxy<br/>httpx stream"]
+        T2E["Session<br/>Ownership"]
+        T2F["Permanent<br/>History"]
+    end
+
+    subgraph TIER3["TẦNG 3 — RAG CORE · rag-core :8001 (127.0.0.1 only)"]
+        direction TB
+        T3A["Phase 1 — Indexing<br/>(offline)<br/>Parser · Chunker · BM25 · Embedding"]
+        T3B["Phase 2 — Retrieval<br/>(runtime)<br/>BM25 · Vector · Hybrid RRF · Rerank"]
+        T3C["Phase 3 — Generation<br/>(runtime)<br/>Query Pipeline · LLM · SSE stream"]
+    end
+
+    subgraph DBS["LƯU TRỮ DỮ LIỆU"]
+        direction LR
+        DB1[("MongoDB<br/>Hierarchical<br/>Điều · Khoản")]
+        DB2[("ChromaDB<br/>Vector<br/>embeddings")]
+        DB3[("SQLite<br/>metadata.db<br/>BM25 · Tabular")]
+        DB4[("SQLite<br/>conversations.db<br/>LLM context 72h")]
+        DB5[("SQLite<br/>users.db<br/>Auth · History")]
+    end
+
+    USR ==>|"HTTPS :443 qua Nginx"| TIER1
+    TIER1 ==>|"HTTP/HTTPS<br/>Vite proxy dev<br/>Nginx prod"| TIER2
+    TIER2 ==>|"HTTP localhost<br/>RAG Core không expose"| TIER3
+    T3A -->|"Index"| T3B
+    T3B -->|"top-k chunks"| T3C
+
+    TIER3 --- DB1
+    TIER3 --- DB2
+    TIER3 --- DB3
+    TIER3 --- DB4
+    TIER2 --- DB5
+
+    classDef client fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#BF360C
+    classDef t1 fill:#E1F5FE,stroke:#01579B,stroke-width:2px,color:#01579B
+    classDef t2 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#4A148C
+    classDef t3 fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef db fill:#FFEBEE,stroke:#C62828,stroke-width:1px,color:#B71C1C
+
+    class USR client
+    class T1A,T1B,T1C,T1D t1
+    class T2A,T2B,T2C,T2D,T2E,T2F t2
+    class T3A,T3B,T3C t3
+    class DB1,DB2,DB3,DB4,DB5 db
+```

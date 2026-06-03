@@ -1,0 +1,17 @@
+flowchart TB
+    INPUT["InputBar.handleSend(question, options)"]
+    SEND["<b>useChat.sendMessage()</b> · guard !trim/isStreaming → return"]
+    SETUP["<b>Setup state + payload</b><br/>· Append userMsg + typingMsg (crypto.randomUUID, isTyping=true)<br/>· Build payload (question, session_id?, fetch_history?, strategy/topK)<br/>· Reset needsHistoryRestore=false"]
+    NEXT(["→ Hình 5.1b · streamChat() + lifecycle"])
+
+    INPUT --> SEND --> SETUP --> NEXT
+
+    classDef in fill:#FFF3E0,stroke:#E65100,color:#BF360C
+    classDef step fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B
+    classDef setup fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#4A148C
+    classDef link fill:#FFFDE7,stroke:#F57F17,stroke-dasharray:5 5,color:#F57F17
+
+    class INPUT in
+    class SEND step
+    class SETUP setup
+    class NEXT link

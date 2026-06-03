@@ -1,0 +1,49 @@
+flowchart TB
+    LOGIN["LoginPage · handleSubmit()"]
+    UA["useAuth.login(username, password)"]
+    POST["POST /auth/login → BFF"]
+
+    OK["<b>Success:</b> {access_token, refresh_token, user}"]
+    AS["authStore.login() · sessionStorage 'agribank_auth' · navigate('/')"]
+    FAIL[("<b>Fail:</b> setError(msg) → errBanner")]
+
+    REQ["⏩ Request bất kỳ qua axios api.js"]
+    INJ["Request interceptor · inject Authorization: Bearer &lt;access_token&gt;"]
+
+    R401{"Response 401?"}
+    REFRESHING{"_refreshing đang chạy?"}
+
+    QUEUE["<b>Đưa request vào queue</b> · _queue.push({resolve, reject}) · đợi token mới"]
+
+    REFRESH["<b>POST /auth/refresh</b> · {refresh_token} → BFF<br/>setTokens(new_access) · processQueue()"]
+
+    LOGOUT["<b>Refresh fail (401):</b> authStore.logout() · clear sessionStorage · redirect /login"]
+
+    LOGIN --> UA --> POST
+    POST --> OK --> AS
+    POST --> FAIL
+
+    REQ --> INJ --> R401
+    R401 -->|"no"| OK_RES[/"✓ trả response"\]
+    R401 -->|"yes"| REFRESHING
+    REFRESHING -->|"yes"| QUEUE
+    REFRESHING -->|"no"| REFRESH
+    REFRESH -.->|"success → retry"| REQ
+    REFRESH -.->|"fail"| LOGOUT
+    QUEUE -.->|"resolve token → retry"| REQ
+
+    classDef login fill:#FFF3E0,stroke:#E65100,color:#BF360C
+    classDef auth fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B
+    classDef ok fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef fail fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#B71C1C
+    classDef decision fill:#FFFDE7,stroke:#F57F17,color:#F57F17
+    classDef refresh fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#4A148C
+    classDef queue fill:#E0F2F1,stroke:#00695C,color:#004D40
+
+    class LOGIN,REQ login
+    class UA,POST,INJ auth
+    class OK,AS,OK_RES ok
+    class FAIL,LOGOUT fail
+    class R401,REFRESHING decision
+    class REFRESH refresh
+    class QUEUE queue

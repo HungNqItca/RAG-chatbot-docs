@@ -1,0 +1,56 @@
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Người dùng
+    participant FE as Frontend<br/>:5173
+    participant BFF as BFF<br/>:8082
+    participant RAG as RAG Core<br/>:8001
+    participant DB as MongoDB /<br/>ChromaDB /<br/>SQLite
+    participant LLM as Gemini<br/>2.5 Flash
+
+    Note over U,LLM: GIAI ĐOẠN 1 — Tiếp nhận và xác thực
+
+    U->>FE: Gõ câu hỏi "Điều 5 Thông tư 39 là gì?"
+    FE->>FE: useChat.sendMessage()
+    FE->>BFF: POST /api/v1/chat/stream<br/>Authorization: Bearer <JWT>
+
+    BFF->>BFF: verify JWT (HS256)
+    BFF->>BFF: check rate limit (slowapi)
+
+    alt Chưa có session_id
+        BFF->>RAG: POST /api/v1/sessions/new
+        RAG-->>BFF: {session_id: 'uuid'}
+        BFF->>BFF: register_session(user_id, sid)
+    else Đã có session_id
+        BFF->>BFF: verify ownership (is_owner)
+    end
+
+    BFF->>RAG: POST /api/v1/chat/stream<br/>{question, session_id}
+
+    Note over U,LLM: GIAI ĐOẠN 2 — Phân loại câu hỏi
+
+    RAG->>RAG: ContentTypeClassifier.classify()<br/>~0ms · 7 rules · fallback=legal
+
+    Note over U,LLM: GIAI ĐOẠN 3 — Query Pipeline 4 tầng (Legal)
+
+    alt Legal query (R1, R7)
+        RAG->>RAG: [Tầng A] slot_detector.detect_slots()<br/>regex: article_ref, clause_ref, doc_refs
+
+        opt Thiếu doc_ref
+            RAG->>RAG: [Tầng B] Sinh câu clarification
+            RAG-->>BFF: SSE event: is_clarification=true
+        end
+
+        opt Biết Điều + VB
+            RAG->>DB: [Tầng B.5] MongoDB direct fetch<br/>bypass BM25/vector
+            DB-->>RAG: Full Điều content
+        end
+
+        opt Có đại từ / tiếp nối
+            RAG->>LLM: [Tầng C] Condense câu hỏi
+            LLM-->>RAG: Câu hỏi đã viết lại
+        end
+    end
+
+    Note over U,LLM: → Tiếp Hình 5.1b: Retrieval + LLM stream + Lưu lịch sử
+```

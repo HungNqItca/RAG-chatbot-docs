@@ -1,0 +1,38 @@
+flowchart TB
+    SOURCE["Loại lỗi xảy ra"]
+
+    RUNTIME["<b>Runtime React</b> (exception, render error)"]
+    API["<b>API errors</b> (4xx/5xx từ axios)"]
+    SSE_ERR["<b>SSE stream errors</b> (network, RAG Core không phản hồi)"]
+    FORM["<b>Form errors</b> (login validation, change password)"]
+
+    EB["<b>ErrorBoundary</b> · class component<br/>màn hình lỗi + nút reload"]
+
+    TOAST["<b>Toast</b> · useToastStore.addToast<br/>auto-dismiss 4s · góc dưới phải"]
+
+    BANNER_SSE["<b>Banner trong MessageList</b> · setError() trong useChat<br/>typingMsg bị xóa"]
+
+    BANNER_FORM["<b>errBanner trong LoginPage</b> · setError(msg)"]
+
+    HELPER["<b>getApiError(err, fallback)</b> · centralize extraction<br/>err.response.data.detail → .error → err.message → fallback"]
+
+    SOURCE --> RUNTIME --> EB
+    SOURCE --> API --> HELPER --> TOAST
+    SOURCE --> SSE_ERR --> BANNER_SSE
+    SOURCE --> FORM --> BANNER_FORM
+
+    classDef source fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#BF360C
+    classDef runtime fill:#FFEBEE,stroke:#C62828,color:#B71C1C
+    classDef api fill:#E1F5FE,stroke:#0277BD,color:#01579B
+    classDef sse fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef form fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef helper fill:#FFFDE7,stroke:#F57F17,color:#F57F17
+    classDef ui fill:#E0F2F1,stroke:#00695C,color:#004D40
+
+    class SOURCE source
+    class RUNTIME,EB runtime
+    class API api
+    class SSE_ERR,BANNER_SSE sse
+    class FORM,BANNER_FORM form
+    class HELPER helper
+    class TOAST ui

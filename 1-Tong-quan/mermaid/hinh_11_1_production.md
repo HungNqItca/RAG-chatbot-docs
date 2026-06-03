@@ -1,0 +1,65 @@
+```mermaid
+flowchart TB
+    subgraph EXT["External"]
+        GEMINI["☁️ Gemini API<br/>generativelanguage<br/>.googleapis.com"]
+    end
+
+    subgraph CLIENT["CLIENT · Nhân viên TTTT Agribank"]
+        BR["💻 Trình duyệt<br/>(Chrome / Edge)"]
+    end
+
+    subgraph SERVER["SERVER ON-PREMISE · Ubuntu 22.04 LTS"]
+        direction TB
+
+        subgraph NGINX_LAYER["Nginx — Reverse Proxy :443"]
+            direction LR
+            NX1["TLS Termination<br/>ssl_protocols TLSv1.2<br/>TLSv1.3"]
+            NX2["Static files<br/>/var/www/agribank-chat/dist<br/>SPA fallback → index.html"]
+            NX3["API routes<br/>/api /auth /admin<br/>→ proxy_pass :8082"]
+            NX4["SSE config<br/>proxy_buffering off<br/>proxy_read_timeout 3600s"]
+        end
+
+        subgraph BFF_LAYER["BFF :8082 (0.0.0.0)"]
+            BFFAPP["FastAPI + slowapi<br/>httpx.AsyncClient shared<br/>TRUSTED_PROXIES=127.0.0.1"]
+        end
+
+        subgraph RAG_LAYER["RAG Core :8001 (127.0.0.1 ONLY)"]
+            RAGAPP["FastAPI<br/>Không expose ra ngoài<br/>Bind loopback"]
+        end
+
+        subgraph DATA_LAYER["Lưu trữ (cùng server)"]
+            direction LR
+            MDB[("MongoDB<br/>:27017<br/>local")]
+            CDB[("ChromaDB<br/>data/chromadb/")]
+            SDB[("SQLite<br/>metadata.db<br/>conversations.db<br/>users.db")]
+        end
+    end
+
+    BR -->|"HTTPS :443<br/>agribank.internal"| NGINX_LAYER
+
+    NX1 --> NX2
+    NX1 --> NX3
+    NX3 -->|"SSE pass-through"| BFFAPP
+    BFFAPP -->|"HTTP localhost:8001"| RAGAPP
+
+    RAGAPP --- MDB
+    RAGAPP --- CDB
+    RAGAPP --- SDB
+    BFFAPP --- SDB
+
+    RAGAPP -.->|"HTTPS outbound<br/>GEMINI_API_KEY"| GEMINI
+
+    classDef client fill:#FFF3E0,stroke:#E65100,stroke-width:2px
+    classDef nginx fill:#E1F5FE,stroke:#0277BD,stroke-width:2px
+    classDef bff fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    classDef rag fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    classDef db fill:#FFEBEE,stroke:#C62828,stroke-width:1px
+    classDef ext fill:#FFFDE7,stroke:#F57F17,stroke-width:2px
+
+    class BR client
+    class NX1,NX2,NX3,NX4 nginx
+    class BFFAPP bff
+    class RAGAPP rag
+    class MDB,CDB,SDB db
+    class GEMINI ext
+```

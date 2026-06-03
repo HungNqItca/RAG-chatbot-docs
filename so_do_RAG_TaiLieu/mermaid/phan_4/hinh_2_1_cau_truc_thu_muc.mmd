@@ -1,0 +1,42 @@
+flowchart TB
+    SRC["📁 src/"]
+
+    MAIN["main.jsx · App.jsx · index.css"]
+
+    PAGES["📁 pages/<br/>LoginPage · ChatPage · AdminPage"]
+
+    COMPS["📁 components/<br/>chat/ · sidebar/ · admin/ · ui/"]
+
+    HOOKS["📁 hooks/<br/>useAuth · useChat · useSessions<br/>useApiMutation · useForm · usePaginatedResource"]
+
+    STORE["📁 store/<br/>authStore · toastStore"]
+
+    SVCS["📁 services/<br/>api.js (axios) · sseClient.js (fetch SSE)"]
+
+    UTILS["📁 utils/ + constants/<br/>apiErrors · sessionNormalizers · time<br/>roles · index"]
+
+    SRC --> MAIN
+    SRC --> PAGES
+    SRC --> COMPS
+    SRC --> HOOKS
+    SRC --> STORE
+    SRC --> SVCS
+    SRC --> UTILS
+
+    classDef root fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#B71C1C
+    classDef main fill:#FFF3E0,stroke:#E65100,color:#BF360C
+    classDef pages fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B
+    classDef comps fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef hooks fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef store fill:#FFFDE7,stroke:#F57F17,color:#F57F17
+    classDef svcs fill:#E0F2F1,stroke:#00695C,color:#004D40
+    classDef utils fill:#FCE4EC,stroke:#C2185B,color:#C2185B
+
+    class SRC root
+    class MAIN main
+    class PAGES pages
+    class COMPS comps
+    class HOOKS hooks
+    class STORE store
+    class SVCS svcs
+    class UTILS utils

@@ -1,0 +1,89 @@
+flowchart TB
+    subgraph SRC["NGUỒN VÀO"]
+        SRC1["File .docx<br/>văn bản pháp lý"]
+        SRC2["File .xlsx<br/>biểu phí · lãi suất"]
+    end
+
+    subgraph PHASE1["PHASE 1 — INDEXING (offline)"]
+        direction TB
+        subgraph LEGAL_ING["Luồng Legal"]
+            L1["LegalDocumentSplitter<br/>regex Điều/Khoản"]
+            L2["1 Khoản = 1 Chunking<br/>(không sliding window)"]
+            L3["Embedding<br/>paraphrase-multilingual-<br/>MiniLM-L12-v2"]
+            L4["BM25Builder<br/>underthesea tokenize"]
+            L1 --> L2 --> L3
+            L2 --> L4
+        end
+
+        subgraph TAB_ING["Luồng Tabular"]
+            T1["YAML config<br/>field mapping"]
+            T2["load_tabular_data.py<br/>parse Excel rows"]
+            T3["build_search_text<br/>+ multi-representation<br/>numeric"]
+            T4["Embedding<br/>VECTOR BLOB float32"]
+            T1 --> T2 --> T3 --> T4
+        end
+    end
+
+    subgraph STORAGE["STORAGE — 5 CSDL"]
+        direction TB
+        DB1[("MongoDB<br/>legal_documents<br/>(hierarchical)")]
+        DB2[("ChromaDB<br/>legal_clauses<br/>(vector embeddings)")]
+        DB3[("SQLite metadata.db<br/>· documents<br/>· chunks<br/>· bm25_statistics<br/>· chunk_term_frequencies<br/>· TABULAR_TYPE<br/>· TABULAR_DATA<br/>· TABULAR_FIELD_META<br/>· tabular_bm25_*")]
+        DB4[("SQLite conversations.db<br/>LLM context · TTL 72h")]
+        DB5[("SQLite users.db<br/>auth · permanent history<br/>(BFF)")]
+    end
+
+    subgraph PHASE2["PHASE 2 — RETRIEVAL (runtime)"]
+        direction TB
+        R1["RetrievalOrchestrator"]
+        R2["BM25Retriever<br/>VectorRetriever<br/>HybridRetriever (RRF)<br/>AdaptiveRetriever"]
+        R3["CrossEncoder Reranker<br/>mmarco-mMiniLMv2"]
+        R4["Article Expansion<br/>(Legal only)"]
+        R1 --> R2 --> R3 --> R4
+    end
+
+    subgraph PHASE3["PHASE 3 — GENERATION (runtime)"]
+        direction TB
+        G1["ContentTypeClassifier<br/>7 rules"]
+        G2["Query Pipeline 4 tầng<br/>A · B · B.5 · C"]
+        G3["PromptBuilder<br/>(legal / tabular)"]
+        G4["LLM Stream<br/>Gemini · VinaLlama · Llama3"]
+        G5["SSE meta · token · done<br/>· followups"]
+        G1 --> G2 --> G3 --> G4 --> G5
+    end
+
+    subgraph OUT["TRẢ LỜI"]
+        OUT1["Streaming text<br/>+ SourceCard<br/>+ Follow-up chips"]
+    end
+
+    SRC1 -->|"ingestion"| LEGAL_ING
+    SRC2 -->|"load_tabular_data"| TAB_ING
+
+    LEGAL_ING --> DB1
+    LEGAL_ING --> DB2
+    LEGAL_ING --> DB3
+    TAB_ING --> DB3
+
+    DB1 -. retrieve .-> PHASE2
+    DB2 -. retrieve .-> PHASE2
+    DB3 -. retrieve .-> PHASE2
+    DB4 -. session .-> PHASE3
+
+    PHASE2 -->|"top-k chunks"| PHASE3
+    PHASE3 --> OUT
+    PHASE3 -->|"save"| DB4
+    PHASE3 -.->|"BFF lưu permanent"| DB5
+
+    classDef src fill:#FFF3E0,stroke:#E65100,stroke-width:2px
+    classDef p1 fill:#E1F5FE,stroke:#0277BD,stroke-width:2px
+    classDef p2 fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px
+    classDef p3 fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    classDef db fill:#FFEBEE,stroke:#C62828,stroke-width:1px
+    classDef out fill:#FFFDE7,stroke:#F57F17,stroke-width:2px
+
+    class SRC1,SRC2 src
+    class L1,L2,L3,L4,T1,T2,T3,T4 p1
+    class R1,R2,R3,R4 p2
+    class G1,G2,G3,G4,G5 p3
+    class DB1,DB2,DB3,DB4,DB5 db
+    class OUT1 out

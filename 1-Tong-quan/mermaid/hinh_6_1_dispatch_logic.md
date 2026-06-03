@@ -1,0 +1,82 @@
+```mermaid
+flowchart TB
+    Q["Câu hỏi người dùng<br/>(query string)"]
+
+    CLF{"<b>ContentTypeClassifier</b><br/>7 rule-based rules<br/>~0ms"}
+
+    R1["<b>R1:</b> Điều X / Khoản Y<br/>Thông tư số / QĐ số<br/><b>LEGAL · conf=0.95</b>"]
+    R2["<b>R2:</b> biểu phí / mức phí<br/>lãi suất / lãi vay<br/><b>TABULAR · conf=0.90</b>"]
+    R3["<b>R3:</b> Số tiền/% + fee/rate<br/>VD: '3% lãi suất'<br/><b>TABULAR · conf=0.80</b>"]
+    R4["<b>R4:</b> 'bao nhiêu' + phí/lãi<br/><b>TABULAR · conf=0.82</b>"]
+    R5["<b>R5:</b> so sánh + phí/lãi<br/><b>TABULAR · conf=0.78</b>"]
+    R6["<b>R6:</b> tra cứu / xem + phí/lãi<br/><b>TABULAR · conf=0.75</b>"]
+    R7["<b>R7:</b> Fallback<br/>(không khớp rule nào)<br/><b>LEGAL · conf=0.60</b>"]
+
+    UD{"<b>unified_dispatch</b><br/>enabled?"}
+
+    UD_T["<b>Parallel dispatch</b><br/>retrieve_unified_sync()"]
+    UD_T2["Run song song:<br/>• Legal pool (BM25+Vector)<br/>• Tabular pool (BM25+Vector)"]
+    UD_T3["<b>CrossEncoder Rerank</b><br/>merged pool"]
+    UD_T4{"top-1 result<br/>content_type?"}
+
+    UD_F["<b>Mutual-exclusive dispatch</b><br/>Dùng content_type từ classifier"]
+
+    LH["<b>LegalGenerationHandler</b><br/>• Query Pipeline 4 tầng<br/>• BM25+Vector+Hybrid+Rerank<br/>• Article Expansion"]
+    TH["<b>TabularGenerationHandler</b><br/>• QueryAnalyzer<br/>• TabularBM25+Vector+RRF<br/>• type_tab filter · numeric boost"]
+    LH2["legal_handler<br/>.answer_with_results()"]
+    TH2["tabular_handler<br/>.answer_with_results()"]
+
+    LLM["LLM generate<br/>→ SSE stream"]
+    OUT["Frontend<br/>hiển thị câu trả lời"]
+
+    Q --> CLF
+    CLF --> R1
+    CLF --> R2
+    CLF --> R3
+    CLF --> R4
+    CLF --> R5
+    CLF --> R6
+    CLF --> R7
+
+    R1 --> UD
+    R2 --> UD
+    R3 --> UD
+    R4 --> UD
+    R5 --> UD
+    R6 --> UD
+    R7 --> UD
+
+    UD -->|"true<br/>(MẶC ĐỊNH)"| UD_T
+    UD -->|"false<br/>(Legacy)"| UD_F
+
+    UD_T --> UD_T2
+    UD_T2 --> UD_T3
+    UD_T3 --> UD_T4
+    UD_T4 -->|"= legal"| LH2
+    UD_T4 -->|"= tabular"| TH2
+
+    UD_F -->|"content_type='legal'"| LH
+    UD_F -->|"content_type='tabular'"| TH
+
+    LH --> LLM
+    TH --> LLM
+    LH2 --> LLM
+    TH2 --> LLM
+    LLM --> OUT
+
+    classDef rule_legal fill:#FFF3E0,stroke:#F57C00,color:#E65100
+    classDef rule_tabular fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef decision fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef handler_legal fill:#FFF8E1,stroke:#F57F17
+    classDef handler_tabular fill:#E0F2F1,stroke:#00695C
+    classDef dispatch fill:#FCE4EC,stroke:#C2185B
+    classDef llm fill:#E8EAF6,stroke:#283593
+
+    class R1,R7 rule_legal
+    class R2,R3,R4,R5,R6 rule_tabular
+    class CLF,UD,UD_T4 decision
+    class LH,LH2 handler_legal
+    class TH,TH2 handler_tabular
+    class UD_T,UD_T2,UD_T3,UD_F dispatch
+    class LLM llm
+```

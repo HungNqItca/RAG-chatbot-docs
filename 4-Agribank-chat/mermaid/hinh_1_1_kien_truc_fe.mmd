@@ -1,0 +1,26 @@
+flowchart TB
+    USER["👤 Người dùng (browser)"]
+
+    subgraph FE["agribank-chat (:5173) — React 18 + Vite 5"]
+        direction TB
+        ROUTER["<b>Router (App.jsx)</b> · ProtectedRoute · AdminRoute"]
+        PAGES["<b>Pages</b> · LoginPage · ChatPage · AdminPage"]
+        STATE["<b>Zustand stores</b> · authStore (sessionStorage) · sessionStore · toastStore"]
+        SVCS["<b>Services</b> · api.js (axios + JWT interceptors) · sseClient.js (fetch streaming)"]
+    end
+
+    BFF["🛡️ BFF (:8082) — auth + rate limit + SSE proxy"]
+
+    USER -->|"https"| ROUTER
+    ROUTER --> PAGES
+    PAGES --> STATE
+    PAGES --> SVCS
+    SVCS -->|"REST + SSE"| BFF
+
+    classDef user fill:#FFF3E0,stroke:#E65100,stroke-width:2px,color:#BF360C
+    classDef fe fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B
+    classDef bff fill:#F3E5F5,stroke:#6A1B9A,stroke-width:2px,color:#4A148C
+
+    class USER user
+    class ROUTER,PAGES,STATE,SVCS fe
+    class BFF bff

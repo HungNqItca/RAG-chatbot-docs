@@ -1,0 +1,20 @@
+flowchart TB
+    PREV["payload từ Hình 5.1a"]
+    STREAM["<b>streamChat('/api/v1/chat/stream', payload, callbacks)</b><br/>· tạo AbortController · fetch POST với Authorization header<br/>· trả abort fn → abortRef.current = abort"]
+
+    LIFE["<b>Lifecycle:</b><br/>· Component mount: useEffect cleanup → abortRef.current?.()<br/>· User nhấn Stop: cancelStream() → abortRef.current() + filter typing<br/>· Stream lỗi: onError() → setError + filter typing + setIsStreaming(false)"]
+
+    EVENTS(["→ Hình 5.2 · SSE events handling (meta/token/done/followups/error)"])
+
+    PREV --> STREAM --> LIFE
+    STREAM --> EVENTS
+
+    classDef prev fill:#FFFDE7,stroke:#F57F17,stroke-dasharray:5 5,color:#F57F17
+    classDef stream fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef life fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef link fill:#FFFDE7,stroke:#F57F17,stroke-dasharray:5 5,color:#F57F17
+
+    class PREV prev
+    class STREAM stream
+    class LIFE life
+    class EVENTS link

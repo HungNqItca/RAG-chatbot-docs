@@ -1,0 +1,41 @@
+flowchart TB
+    SSE["📡 sseClient.streamChat() · fetch().body.getReader()<br/>buffer split('\\n\\n') → parse 'data: {...}'"]
+
+    EV{"event.type ?"}
+
+    META["<b>onMeta(event)</b><br/>· setCurrentSessionId(event.session_id)<br/>· registerSession(id, question)<br/>· sources = event.sources<br/>· thay typingMsg bằng empty bot msg"]
+
+    TOKEN["<b>onToken(content)</b><br/>· accContent += content<br/>· setMessages: cập nhật content message cuối"]
+
+    DONE["<b>onDone(event)</b><br/>· finalSources = event.effective_sources ?? acc_sources<br/>· gán generation_time_ms<br/>· setIsStreaming(false)"]
+
+    FOLLOW["<b>onFollowups(items)</b><br/>· gán items vào last message · render chip buttons"]
+
+    ERR["<b>onError(detail)</b><br/>· setError(detail)<br/>· filter typingMsg ra khỏi messages<br/>· setIsStreaming(false)"]
+
+    UI[/"<b>MessageList re-render</b><br/>StreamingDot trong khi typing<br/>Markdown content qua react-markdown<br/>SourceCard + FollowupChips ở message cuối"\]
+
+    SSE --> EV
+    EV -->|"meta"| META --> UI
+    EV -->|"token"| TOKEN --> UI
+    EV -->|"done"| DONE --> UI
+    EV -->|"followups"| FOLLOW --> UI
+    EV -->|"error"| ERR --> UI
+
+    classDef sse fill:#E1F5FE,stroke:#0277BD,stroke-width:2px,color:#01579B
+    classDef decision fill:#FFFDE7,stroke:#F57F17,color:#F57F17
+    classDef meta fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef token fill:#E0F2F1,stroke:#00695C,color:#004D40
+    classDef done fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef follow fill:#FFF3E0,stroke:#E65100,color:#BF360C
+    classDef err fill:#FFEBEE,stroke:#C62828,color:#B71C1C
+    classDef ui fill:#FCE4EC,stroke:#C2185B,stroke-width:2px,color:#C2185B
+
+    class SSE sse
+    class EV decision
+    class META meta
+    class TOKEN token
+    class DONE done
+    class FOLLOW follow
+    class ERR err
+    class UI ui

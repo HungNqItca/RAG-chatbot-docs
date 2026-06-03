@@ -1,0 +1,22 @@
+{
+  "theme": "default",
+  "themeVariables": {
+    "fontFamily": "Arial, sans-serif",
+    "fontSize": "14px"
+  },
+  "flowchart": {
+    "useMaxWidth": false,
+    "htmlLabels": true,
+    "curve": "basis",
+    "nodeSpacing": 30,
+    "rankSpacing": 30,
+    "padding": 8
+  },
+  "sequence": {
+    "useMaxWidth": false,
+    "diagramMarginX": 20,
+    "diagramMarginY": 10,
+    "actorMargin": 50,
+    "messageFontSize": 13
+  }
+}
