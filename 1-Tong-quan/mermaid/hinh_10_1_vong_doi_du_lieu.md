@@ -45,7 +45,7 @@ flowchart TB
 
     subgraph PHASE3["PHASE 3 — GENERATION (runtime)"]
         direction TB
-        G1["ContentTypeClassifier<br/>7 rules"]
+        G1["ContentTypeClassifier<br/>8 rules"]
         G2["Query Pipeline 4 tầng<br/>A · B · B.5 · C"]
         G3["PromptBuilder<br/>(legal / tabular)"]
         G4["LLM Stream<br/>Gemini · VinaLlama · Llama3"]

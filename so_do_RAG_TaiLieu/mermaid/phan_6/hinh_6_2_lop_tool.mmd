@@ -1,0 +1,15 @@
+flowchart TB
+    LOOP["AgentLoop"] --> TR["ToolRegistry.dispatch(name, args)"]
+    TR --> FZ["Fuzzy match tên tool<br/>Levenshtein ≤ 2"]
+    FZ --> VAL["validate(args)<br/>thiếu arg / sai kiểu → lỗi rõ"]
+    VAL --> RUN["tool.run() trong try/except"]
+    RUN --> T1["search_legal<br/>→ retrieve()"]
+    RUN --> T2["search_tabular<br/>→ retrieve_tabular()"]
+    RUN --> T3["fetch_article<br/>→ lookup + fetch Mongo"]
+    RUN --> T4["compute<br/>→ TabularAggregator.aggregate()"]
+    T1 --> OBS["ToolObservation<br/>raw · structured · truncated"]
+    T2 --> OBS
+    T3 --> OBS
+    T4 --> OBS
+    OBS --> LOOP
+    OBS -.->|ok=False, KHÔNG raise| LOOP

@@ -2,7 +2,7 @@ flowchart TB
     Q["ChatRequest (question · session_id?)"]
     SES["_ensure_session()"]
     HIS["session.get_history()"]
-    CLF["_classify_and_log()<br/>ContentTypeClassifier 7 rules"]
+    CLF["_classify_and_log()<br/>ContentTypeClassifier 8 rules"]
 
     UD{"unified_dispatch.enabled?"}
 

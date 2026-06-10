@@ -20,7 +20,7 @@
 | 3 | Kiến trúc tổng thể — 3 tầng | **Hình 3.1** |
 | 4 | Công nghệ nền (4 bảng thư viện) | — |
 | 5 | Luồng end-to-end một câu hỏi (6 giai đoạn, ~46 bước) | **Hình 5.1** |
-| 6 | Hai pipeline song song — Content Type Dispatch (7 rule) | **Hình 6.1** |
+| 6 | Hai pipeline song song — Content Type Dispatch (8 rule) | **Hình 6.1** |
 | 7 | Cấu trúc mã nguồn | **Hình 7.1, 7.2** |
 | 8 | Môi trường & Cấu hình (3 .env + 2 YAML) | — |
 | 9 | Vận hành — Khởi động 3 service | **Hình 9.1** |

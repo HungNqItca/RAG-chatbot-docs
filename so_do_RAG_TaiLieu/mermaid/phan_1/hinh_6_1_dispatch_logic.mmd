@@ -1,7 +1,7 @@
 flowchart TB
     Q["Câu hỏi người dùng<br/>(query string)"]
 
-    CLF{"<b>ContentTypeClassifier</b><br/>7 rule-based rules<br/>~0ms"}
+    CLF{"<b>ContentTypeClassifier</b><br/>8 rule-based rules<br/>~0ms"}
 
     R1["<b>R1:</b> Điều X / Khoản Y<br/>Thông tư số / QĐ số<br/><b>LEGAL · conf=0.95</b>"]
     R2["<b>R2:</b> biểu phí / mức phí<br/>lãi suất / lãi vay<br/><b>TABULAR · conf=0.90</b>"]
@@ -9,6 +9,7 @@ flowchart TB
     R4["<b>R4:</b> 'bao nhiêu' + phí/lãi<br/><b>TABULAR · conf=0.82</b>"]
     R5["<b>R5:</b> so sánh + phí/lãi<br/><b>TABULAR · conf=0.78</b>"]
     R6["<b>R6:</b> tra cứu / xem + phí/lãi<br/><b>TABULAR · conf=0.75</b>"]
+    RDR["<b>R_DOC_REF:</b> mã VB pháp lý<br/>15/2024/TT-NHNN<br/><b>LEGAL · conf=0.92</b>"]
     R7["<b>R7:</b> Fallback<br/>(không khớp rule nào)<br/><b>LEGAL · conf=0.60</b>"]
 
     UD{"<b>unified_dispatch</b><br/>enabled?"}
@@ -35,6 +36,7 @@ flowchart TB
     CLF --> R4
     CLF --> R5
     CLF --> R6
+    CLF --> RDR
     CLF --> R7
 
     R1 --> UD
@@ -43,6 +45,7 @@ flowchart TB
     R4 --> UD
     R5 --> UD
     R6 --> UD
+    RDR --> UD
     R7 --> UD
 
     UD -->|"true<br/>(MẶC ĐỊNH)"| UD_T
@@ -71,7 +74,7 @@ flowchart TB
     classDef dispatch fill:#FCE4EC,stroke:#C2185B
     classDef llm fill:#E8EAF6,stroke:#283593
 
-    class R1,R7 rule_legal
+    class R1,R7,RDR rule_legal
     class R2,R3,R4,R5,R6 rule_tabular
     class CLF,UD,UD_T4 decision
     class LH,LH2 handler_legal

@@ -1,0 +1,10 @@
+flowchart TB
+    Q["Câu hỏi người dùng"] --> SW{"agentic_rag = ?"}
+    SW -->|false| OLD["Pipeline RAG-SQLite NGUYÊN TRẠNG<br/>(không khởi tạo agent)"]
+    SW -->|true| RT{"Router.decide()"}
+    RT -->|simple| FP["Fast-path<br/>classifier + slot + unified_dispatch"]
+    RT -->|complex| AO["AgentOrchestrator<br/>ReAct loop → CitationGuard → stream"]
+    AO -.->|None / fallback| FP
+    OLD --> ANS["Câu trả lời"]
+    FP --> ANS
+    AO --> ANS

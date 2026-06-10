@@ -1,0 +1,7 @@
+flowchart TB
+    EX["extract_citations — trích Điều / Khoản / số hiệu văn bản bằng regex"] --> M{"Trích dẫn đã khớp trong structured_trace chưa?"}
+    M -->|"đã có bằng chứng"| V["verified — trích dẫn được chấp nhận"]
+    M -->|"chưa có"| FE["Gọi fetch_article xác minh trực tiếp trên DB"]
+    FE --> C{"Văn bản, Điều và Khoản đều tồn tại trong kho?"}
+    C -->|"đầy đủ"| V
+    C -->|"thiếu bất kỳ thành phần nào"| U["unverified → CHẶN (ba ca đối kháng)"]

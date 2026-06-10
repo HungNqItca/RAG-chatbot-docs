@@ -658,6 +658,8 @@ const sendMessage = useCallback(async (question, options = {}) => {
 | `followups` | Sau `done` (optional) | Gắn `items` vào last message → render chip buttons |
 | `error` | Bất kỳ lúc nào | Set error, xóa typingMsg ra khỏi messages |
 
+> **Mở rộng cho Agentic RAG (Phần 6 §7):** Khi bật `agentic_rag=true` và câu hỏi đi nhánh agent, BFF chuyển tiếp thêm event `step` (trạng thái trung gian, vd "Đang tra cứu văn bản pháp lý...") **trước** các event `token`. `sseClient.js` thêm callback `onStep`; `useChat` lưu `currentStep` trên message đang stream và xóa khi token đầu tiên tới; `MessageBubble.jsx` hiện spinner + `currentStep` khi chưa có nội dung. Client cũ bỏ qua event lạ nên không vỡ nếu chưa cập nhật handler. Lưu ý: token của nhánh agent là nội dung **đã được CitationGuard verify** (xem Phần 6 §7.1 — verify-trước-stream).
+
 ### 5.5 needsHistoryRestore flag — Khôi phục context cho session cũ
 
 **Vấn đề:** Session trên RAG Core có TTL 72h. Sau 72h, conversation history bị xóa → LLM mất context. Nhưng BFF lưu permanent trong SQLite.
@@ -1224,8 +1226,8 @@ Bảng thuật ngữ tổng hợp từ Phần 1-4 để tra cứu nhanh:
 |---|---|
 | Ingestion fail → orphan data | `phase1_indexing/ingestion.py` (Saga) |
 | Bug chunking sai cấu trúc Điều/Khoản | `phase1_indexing/lib/legal_document_splitter.py` |
-| Retrieval trả ít/nhiều kết quả không phù hợp | `phase2_retrieval/src/retrievers/adaptive.py` |
-| RRF score không như expected | `shared/fusion.py` + `phase2_retrieval/src/retrievers/hybrid.py` |
+| Retrieval trả ít/nhiều kết quả không phù hợp | `phase2_retrieval/src/orchestrator.py` (chọn strategy adaptive) |
+| RRF score không như expected | `shared/fusion.py` + `phase2_retrieval/src/retrievers/hybrid_retriever.py` |
 | LLM trả lời không đúng strategy | `phase3_generation/core/generation_orchestrator.py` |
 | Slot detection thiếu | `phase3_generation/core/slot_detector.py` |
 | Tabular không filter đúng type | `phase3_generation/core/handlers/tabular_handler.py` |

@@ -1,0 +1,29 @@
+flowchart TB
+    CRON["cron 2h sáng<br/>08_backup_to_gcs.sh"]
+    DUMP["mongodump + tar<br/>ChromaDB · SQLite"]
+    SP["<b>storage_provider.sh</b><br/>(router)"]
+    GCS["GCS bucket<br/>giữ 90 ngày"]
+    MINIO["MinIO<br/>(on-prem · stub)"]
+    RTEST["cron tháng<br/>09_restore_test.sh"]
+    EPH["container mongo tạm<br/>:27117 (chỉ đọc backup)"]
+    VERIFY{"countDocuments > 0<br/>file size OK?"}
+    REPORT["Báo cáo PASS/FAIL"]
+
+    CRON --> DUMP --> SP
+    SP -->|"STORAGE_PROVIDER=gcs"| GCS
+    SP -.->|"=minio (on-prem)"| MINIO
+    RTEST --> EPH
+    GCS --> EPH
+    EPH --> VERIFY --> REPORT
+
+    classDef job fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
+    classDef router fill:#FFF3E0,stroke:#F57C00,color:#E65100
+    classDef store fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef alt fill:#ECEFF1,stroke:#90A4AE,color:#546E7A
+    classDef dec fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+
+    class CRON,DUMP,RTEST,EPH job
+    class SP router
+    class GCS,REPORT store
+    class MINIO alt
+    class VERIFY dec

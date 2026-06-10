@@ -1,0 +1,11 @@
+flowchart TB
+    M1["<b>0001</b> initial_schema.sql<br/>tạo toàn bộ bảng · idempotent"]
+    M2["<b>0002</b> user_sessions_v2.py<br/>+ title, updated_at"]
+    M3["<b>0003</b> role_4tier.py<br/>CHECK role 2→4 tier"]
+    M4["<b>0004</b> jwt_keys.sql<br/>JWT key rotation"]
+    M5["<b>0005</b> chat_feedback.sql<br/>rating ∈ {1,-1}"]
+    M1 --> M2 --> M3 --> M4 --> M5
+    classDef sql fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef py fill:#FFF3E0,stroke:#F57C00,color:#E65100
+    class M1,M4,M5 sql
+    class M2,M3 py
