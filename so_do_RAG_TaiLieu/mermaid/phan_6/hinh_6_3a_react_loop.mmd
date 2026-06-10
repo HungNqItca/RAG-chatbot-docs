@@ -1,0 +1,9 @@
+flowchart TB
+    G["llm.generate() rồi ReActParser.parse() — không stream"] --> K{"Parser trả về loại bước nào?"}
+    K -->|"action — gọi tool"| D["ToolRegistry.dispatch và lưu structured vào scratchpad"]
+    D --> B{"Đã chạm budget chưa?"}
+    B -->|"chưa — lặp tiếp"| G
+    B -->|"rồi"| FF["_force_final — ép LLM tổng hợp lần cuối"]
+    K -->|"error ≥ 2 lần liên tiếp"| FF
+    K -->|"final — có Final Answer"| FIN["Final Answer kèm structured_trace"]
+    FF --> FIN

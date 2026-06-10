@@ -1,0 +1,14 @@
+flowchart TB
+    subgraph SC["Scratchpad — nối kết quả giữa các bước"]
+        R1["search_tabular #1<br/>→ items A"]
+        R2["search_tabular #2<br/>→ items B"]
+        REF["compute(items='all_tabular')"]
+        REF --> RES["_resolve_references()<br/>gộp A + B từ scratchpad"]
+    end
+    subgraph BG["Budget — chống loop vô hạn (model nhỏ)"]
+        I["max_iterations = 6"]
+        TC["max_tool_calls_per_type = 3"]
+        WT["wall_clock_timeout_s = 30"]
+    end
+    R1 --> R2 --> REF
+    BG -.->|chạm bất kỳ ngưỡng| FORCE["forced_final<br/>(luôn có structured_trace)"]

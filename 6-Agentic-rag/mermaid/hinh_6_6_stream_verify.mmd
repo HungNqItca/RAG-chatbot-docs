@@ -1,0 +1,15 @@
+sequenceDiagram
+    participant U as Người dùng
+    participant AO as AgentOrchestrator
+    participant LP as AgentLoop
+    participant CG as CitationGuard
+    U->>AO: stream_answer(question)
+    AO->>LP: run() — non-stream
+    LP-->>AO: Final Answer + structured_trace
+    AO-->>U: event 'step' (Đang tra cứu...)
+    Note over AO,CG: verify TRƯỚC khi stream token
+    AO->>CG: check(final, trace)
+    CG-->>AO: GuardResult (verify/repair/annotate)
+    AO-->>U: event 'meta' (nguồn, sau verify)
+    AO-->>U: event 'token' × N (đã verify, _chunk_text)
+    AO-->>U: event 'done'

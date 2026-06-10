@@ -1,0 +1,28 @@
+flowchart TB
+    PUSH["push / PR → main"]
+    LINT["<b>lint</b> · ruff + npm lint"]
+    TEST["<b>test</b> · pytest + coverage"]
+    GATE{"push main?"}
+    BUILD["<b>build-push</b> · 4 images → Registry"]
+    TRIVY["<b>trivy-scan</b> · CRITICAL/HIGH"]
+    APPROVE{"approve?"}
+    DEPLOY["<b>deploy</b> · IAP + 05_deploy_vm.sh"]
+    SMOKE{"smoke /health?"}
+    OK["✓ thành công"]
+    RB["⤺ auto-rollback"]
+
+    PUSH --> LINT --> TEST --> GATE
+    GATE -->|"PR: dừng"| OK
+    GATE -->|"có"| BUILD --> TRIVY --> APPROVE
+    APPROVE --> DEPLOY --> SMOKE
+    SMOKE -->|"PASS"| OK
+    SMOKE -->|"FAIL"| RB
+
+    classDef job fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
+    classDef decision fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef good fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef bad fill:#FFEBEE,stroke:#C62828,color:#B71C1C
+    class PUSH,LINT,TEST,BUILD,TRIVY,DEPLOY job
+    class GATE,APPROVE,SMOKE decision
+    class OK good
+    class RB bad

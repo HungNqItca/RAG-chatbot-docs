@@ -1,0 +1,22 @@
+flowchart TB
+    Q["Câu hỏi"] --> RT["Router.decide()"]
+    RT --> SIG["_detect_signals() — regex rẻ, không gọi LLM"]
+    SIG --> S1["compare+multi_doc"]
+    SIG --> S2["mixed_tabular_legal"]
+    SIG --> S3["aggregation_tabular"]
+    SIG --> S4["multi_clause"]
+    S1 --> MODE{"router.mode"}
+    S2 --> MODE
+    S3 --> MODE
+    S4 --> MODE
+    MODE -->|shadow| FPL["fast-path<br/>(chỉ GHI LOG)"]
+    MODE -->|off| FPL
+    MODE -->|conservative + tín hiệu mạnh| AG["AgentOrchestrator"]
+    AG --> LP["AgentLoop.run"]
+    LP --> CGD{"CitationGuard"}
+    CGD -->|all_verified| OUT["Trả lời"]
+    CGD -->|sai + còn budget| RP["REPAIR ≤ max_repair_loops"]
+    CGD -->|sai + cạn budget| AN["ANNOTATE — hạ cấp câu sai"]
+    RP --> OUT
+    AN --> OUT
+    AG -.->|lỗi / rỗng| FPL

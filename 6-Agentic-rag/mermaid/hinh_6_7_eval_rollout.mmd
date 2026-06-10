@@ -1,0 +1,17 @@
+flowchart TB
+    subgraph EV["Eval 4 nhóm (agentic_eval_corpus.json)"]
+        N1["N1 regression<br/>không hỏng câu đơn giản"]
+        N2["N2 multi_doc<br/>so sánh ≥ 2 văn bản"]
+        N3["N3 mixed<br/>biểu phí + pháp lý"]
+        N4["N4 adversarial<br/>chống hallucinate"]
+    end
+    EV --> SC["agentic_eval_scorer.py<br/>precision/recall · refusal · tool/route"]
+    subgraph RO["Bật dần (rollout)"]
+        B0["agentic_rag=false<br/>(mặc định an toàn)"]
+        B1["shadow — đo, không route"]
+        B2["router_log_analyzer.py<br/>tỉ lệ phức tạp < 20%?"]
+        B3["conservative — bật thật"]
+    end
+    B0 --> B1 --> B2 --> B3
+    SC -.->|N4 hallucination_rate>0| STOP["DỪNG rollout"]
+    B3 --> HC["/health → mode: agentic"]

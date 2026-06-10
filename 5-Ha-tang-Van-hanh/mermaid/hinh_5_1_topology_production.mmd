@@ -1,0 +1,33 @@
+flowchart TB
+    NET["Internet"]
+    NG["<b>Nginx (frontend)</b><br/>điểm vào duy nhất<br/>TLS · static · reverse proxy<br/>cổng 80/443"]
+    BFF["<b>bff-service</b><br/>:8082 nội bộ<br/>auth · proxy · SSE"]
+    RC["<b>rag-core</b><br/>:8001 nội bộ<br/>lõi RAG"]
+    MG["<b>mongodb</b><br/>mongo:7<br/>cấu trúc tài liệu"]
+    RD["<b>redis</b><br/>redis:7-alpine<br/>rate-limit store"]
+    PR["<b>prometheus</b><br/>scrape metrics<br/>(không expose)"]
+    GF["<b>grafana</b><br/>dashboard<br/>(qua /grafana)"]
+    RCG["rag-core-green<br/>profile: green"]
+    BFG["bff-green<br/>profile: green"]
+
+    NET --> NG
+    NG --> BFF
+    BFF --> RC
+    RC --> MG
+    BFF --> RD
+    PR --> BFF
+    PR --> RC
+    GF --> PR
+    NG -.->|/grafana| GF
+
+    classDef edge fill:#FCE4EC,stroke:#C2185B,color:#880E4F
+    classDef app fill:#E8EAF6,stroke:#283593,color:#1A237E
+    classDef data fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+    classDef mon fill:#FFF3E0,stroke:#F57C00,color:#E65100
+    classDef green fill:#ECEFF1,stroke:#90A4AE,color:#546E7A
+
+    class NET,NG edge
+    class BFF,RC app
+    class MG,RD data
+    class PR,GF mon
+    class RCG,BFG green

@@ -958,6 +958,8 @@ defaults:
 
 ## 4. Phase 3 — Generation
 
+> **Lưu ý:** Phase 3 còn có một **bản nâng cấp Agentic RAG** (vòng lặp ReAct, 4 tool, CitationGuard, Router) cho phép trả lời câu hỏi đa bước — bọc sau công tắc `agentic_rag` (mặc định tắt). Toàn bộ phần nâng cấp được tài liệu hóa riêng ở **Phần 6 — Nâng cấp Agentic RAG**. Mục 4 dưới đây mô tả pipeline Generation hiện tại, vẫn đúng nguyên vẹn khi `agentic_rag=false`.
+
 ### 4.1 Tổng quan Phase 3
 
 Phase 3 là **tầng sinh câu trả lời** của hệ thống RAG. Đây là phase phức tạp nhất về logic nghiệp vụ vì phải xử lý nhiều trường hợp khác nhau:
@@ -974,7 +976,7 @@ Phase 3 là **tầng sinh câu trả lời** của hệ thống RAG. Đây là p
 
 - **Legal pipeline:** Trả lời câu hỏi pháp lý, **luôn trích dẫn** Điều/Khoản cụ thể trong văn bản nguồn.
 - **Tabular pipeline:** Tra cứu biểu phí / lãi suất / khuyến mãi từ SQLite TABULAR_DATA.
-- **ContentTypeClassifier:** 7 rules regex ~0ms, fallback về `legal` — zero regression guarantee.
+- **ContentTypeClassifier:** 8 rules regex ~0ms (R1–R6, R_DOC_REF, R7), fallback về `legal` — zero regression guarantee.
 - Hỗ trợ **hội thoại đa lượt** có nhớ ngữ cảnh (multi-turn).
 - Chạy được với cả **Gemini API (cloud)** và **VinaLlama (local CPU)**.
 - Không phụ thuộc vào Phase 2 API server — gọi trực tiếp qua import Python.
@@ -1263,7 +1265,7 @@ class SlotResolutionResult:
 
 #### 4.4.2 P2 — Type-Tab Filter
 
-Khi classifier trả về `type_tab_hint='PHI_CANHAN'` với `confidence ≥ 0.80`, filter được áp dụng tại Phase 2 BM25 + Vector trước khi retrieve:
+Khi classifier trả về `type_tab_hint='PHI-CANHAN'` với `confidence ≥ 0.80`, filter được áp dụng tại Phase 2 BM25 + Vector trước khi retrieve:
 
 ```sql
 SELECT ... FROM TABULAR_DATA
@@ -1277,12 +1279,15 @@ WHERE TYPE_TAB = 'PHI'
 #### 4.4.3 P3 — Query Analyzer
 
 ```python
-# query_analyzer.py — extract entities + intent
+# shared/query_analyzer.py — extract entities + intent
 analysis = QueryAnalyzer().analyze("Phí chuyển tiền 5 triệu là bao nhiêu?")
-# analysis.numeric_entities  = [{"value": 5000000, "type": "VND"}]
+# analysis.numeric_entities  = [NumericEntity(value=5000000.0, unit="VND",
+#                                             raw_text="5 triệu", position=(...))]
 # analysis.temporal_entities = []
-# analysis.aggregation_intent = "LOOKUP"   # | COMPARE | MIN | MAX | LIST_ALL
+# analysis.aggregation_intent = None   # None (mặc định) | COMPARE | MIN | MAX | LIST_ALL
 ```
+
+> **Lưu ý:** `aggregation_intent` mặc định là `None` — chỉ được gán khi query khớp một trong các rule tổng hợp (so sánh → `COMPARE`, thấp nhất → `MIN`, cao nhất → `MAX`, liệt kê tất cả → `LIST_ALL`). Câu hỏi tra cứu một giá trị đơn lẻ như ví dụ trên không khớp rule nào nên giữ `None`; handler sẽ xử lý theo nhánh lookup mặc định.
 
 Lưu vào `_last_analysis` để dùng ở post-retrieval filter.
 
@@ -1313,14 +1318,14 @@ if results[0].score < tabular.min_score:        # 0.005
 
 **Aggregation:**
 
-Khi `aggregation_intent` không phải `LOOKUP`, builder dùng `TabularAggregator`:
+Khi `aggregation_intent` khác `None` (tức là một trong 4 intent tổng hợp) **và** số kết quả ≥ `min_rows_for_table` (mặc định 2), handler gọi `TabularAggregator`:
 
 | Intent | Output format |
 |---|---|
 | `COMPARE` | Markdown table với các row được so sánh side-by-side |
 | `MIN` / `MAX` | Highlighted row với note "đây là mức thấp/cao nhất" |
 | `LIST_ALL` | Numbered list tất cả options |
-| `LOOKUP` | Default — single row hoặc top-3 |
+| `None` (mặc định) | Không gọi aggregator — trả single row hoặc top-3 như lookup thường |
 
 Output được nhúng vào prompt thành markdown — LLM render lại nguyên dạng cho user.
 

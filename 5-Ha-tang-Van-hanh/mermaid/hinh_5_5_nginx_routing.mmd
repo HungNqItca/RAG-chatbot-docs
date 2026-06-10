@@ -1,0 +1,23 @@
+flowchart TB
+    REQ["Request HTTPS<br/>từ trình duyệt"]
+    NG{"<b>Nginx</b><br/>match location"}
+    API["/api · /auth · /admin<br/><b>→ bff-service:8082</b><br/>SSE: buffering off<br/>timeout 3600s"]
+    GRAF["/grafana<br/><b>→ grafana:3000</b><br/>(internal)"]
+    HEALTH["/health<br/>→ bff /health<br/>(access_log off)"]
+    STATIC["mọi path khác<br/><b>→ static React</b><br/>try_files → index.html"]
+
+    REQ --> NG
+    NG -->|"^/(api|auth|admin)"| API
+    NG -->|"/grafana"| GRAF
+    NG -->|"= /health"| HEALTH
+    NG -->|"/"| STATIC
+
+    classDef req fill:#E8EAF6,stroke:#283593,color:#1A237E
+    classDef dec fill:#F3E5F5,stroke:#6A1B9A,color:#4A148C
+    classDef route fill:#E3F2FD,stroke:#1565C0,color:#0D47A1
+    classDef stat fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+
+    class REQ req
+    class NG dec
+    class API,GRAF,HEALTH route
+    class STATIC stat

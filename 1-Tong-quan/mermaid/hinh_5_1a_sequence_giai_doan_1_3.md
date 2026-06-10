@@ -29,7 +29,7 @@ sequenceDiagram
 
     Note over U,LLM: GIAI ĐOẠN 2 — Phân loại câu hỏi
 
-    RAG->>RAG: ContentTypeClassifier.classify()<br/>~0ms · 7 rules · fallback=legal
+    RAG->>RAG: ContentTypeClassifier.classify()<br/>~0ms · 8 rules · fallback=legal
 
     Note over U,LLM: GIAI ĐOẠN 3 — Query Pipeline 4 tầng (Legal)
 

@@ -1,0 +1,23 @@
+flowchart TB
+    BFFM["<b>bff-service</b><br/>/metrics<br/>http_requests_total<br/>http_request_duration"]
+    RCM["<b>rag-core</b><br/>/metrics<br/>rag_chat_requests_total<br/>rag_llm_duration"]
+    PROM["<b>Prometheus</b><br/>scrape 15s / 30s<br/>(mạng nội bộ)"]
+    RULES["<b>alerts.yml</b><br/>6 quy tắc cảnh báo"]
+    ALERTS["Cảnh báo<br/>critical / warning"]
+    GRAF["<b>Grafana</b><br/>dashboard:<br/>agribank-rag · cost"]
+    USER["Đội vận hành<br/>(qua Nginx /grafana)"]
+
+    BFFM --> PROM
+    RCM --> PROM
+    PROM --> RULES --> ALERTS
+    PROM --> GRAF --> USER
+
+    classDef app fill:#E8EAF6,stroke:#283593,color:#1A237E
+    classDef mon fill:#FFF3E0,stroke:#F57C00,color:#E65100
+    classDef alert fill:#FFEBEE,stroke:#C62828,color:#B71C1C
+    classDef user fill:#E8F5E9,stroke:#2E7D32,color:#1B5E20
+
+    class BFFM,RCM app
+    class PROM,RULES,GRAF mon
+    class ALERTS alert
+    class USER user
